@@ -1,0 +1,29 @@
+{
+    "name": "perezale/l5-stomp-queue",
+    "description": "STOMP Queue and Broadcaster Driver for Laravel 5.5",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alejandro",
+            "email": "alecio88@gmail.com"
+        }
+    ],
+    "require": {
+        "stomp-php/stomp-php": "^4.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Perezale\\L5StompQueue\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Perezale\\L5StompQueue\\StompServiceProvider"
+            ],
+            "aliases": {
+                "Stomp": "Perezale\\L5StompQueue\\StompFacade"
+            }
+        }
+    }
+}
