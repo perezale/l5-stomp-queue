@@ -1,45 +1,96 @@
 <?php
 
+use Stomp\SimpleStomp;
+use Stomp\Broker\ActiveMq\ActiveMq;
+
 class ConnectionTest extends PHPUnit_Framework_TestCase {
 
-    public function testConnect()
-    {
-        // make a connection
-        //$con = new \FuseSource\Stomp\Stomp("tcp://10.200.116.202:61613");
-        $con = new \Stomp\StatefulStomp(new \Stomp\Client("tcp://localhost:61613"));
+  /**
+   * @var SimpleStomp
+   */
+  private $simpleStomp;
+  /**
+   * @var Client
+   */
+  private $Stomp;
 
-        $con->connect();
+  private $queue = '/queue/test';
+  private $topic = '/topic/test';
 
-        $this->assertTrue($con->isConnected());
-        $this->assertNotNull($con->getSessionId());
 
-        $con->send("test", "hello");
+  public function testConnect()
+  {
+      // make a connection
+      $statefulStomp = new \Stomp\StatefulStomp($this->Stomp);
 
-        $con->disconnect();
+      $client = $statefulStomp->getClient();
+
+      $this->assertFalse($client->isConnected());
+
+      $client->connect();
+
+      $this->assertTrue($client->isConnected());
+      $this->assertNotNull($client->getSessionId());
+
+      $client->disconnect();
+  }
+
+  public function testInitialStateIsProducer()
+  {
+      $stateful = new \Stomp\StatefulStomp(new \Stomp\Client('tcp://127.0.0.1:61613'));
+      $this->assertInstanceOf(\Stomp\States\ProducerState::class, $stateful->getState());
+  }
+
+  protected function setUp(){
+    parent::setUp();
+    $this->Stomp = ClientProvider::getClient();
+    $this->simpleStomp = new SimpleStomp($this->Stomp);
+  }
+
+  public function testActiveMQ()
+  {
+
+    if (! $this->Stomp->isConnected()) {
+        $this->Stomp->setSync(false);
+        $this->Stomp->connect();
     }
 
-    /*public function testConsume()
-    {
-        // make a connection
-        $con = new \FuseSource\Stomp\Stomp("tcp://localhost:61613");
+    $this->assertInstanceOf(ActiveMq::class, $this->Stomp->getProtocol(), 'Expected an ActiveMq Broker.');
 
-        $con->connect();
+    $this->Stomp->send($this->topic, "hello",  ['persistent' => 'true']);
 
-        $this->assertTrue($con->isConnected());
-        $this->assertNotNull($con->getSessionId());
+    $this->Stomp->disconnect();
 
-        $con->subscribe("teste");
+  }
 
-        $msg = $con->readFrame();
+  protected function tearDown()
+  {
+      $this->Stomp = null;
+      parent::tearDown();
+  }
 
-        if ( $msg != null) {
-            echo "Received message with body '$msg->body'\n";
-            // mark the message as received in the queue
-            $con->ack($msg);
-        } else {
-            echo "Failed to receive a message\n";
-        }
+  /*public function testConsume()
+  {
+      // make a connection
+      $con = new \FuseSource\Stomp\Stomp("tcp://localhost:61613");
 
-        $con->disconnect();
-    }*/
+      $con->connect();
+
+      $this->assertTrue($con->isConnected());
+      $this->assertNotNull($con->getSessionId());
+
+      $con->subscribe("teste");
+
+      $msg = $con->readFrame();
+
+      if ( $msg != null) {
+          echo "Received message with body '$msg->body'\n";
+          // mark the message as received in the queue
+          $con->ack($msg);
+      } else {
+          echo "Failed to receive a message\n";
+      }
+
+      $con->disconnect();
+  }*/
 }

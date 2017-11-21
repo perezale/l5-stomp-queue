@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Mayconbordin\L5StompQueue;
 
@@ -61,6 +61,18 @@ class StompQueue extends Queue implements QueueContract
         $this->default     = $default;
         $this->system      = $system;
         $this->credentials = $credentials;
+    }
+
+    /**
+     * Get the size of the queue.
+     *
+     * @param  string  $queue
+     * @return int
+     */
+    public function size($queue = null)
+    {
+        $queue = $this->getQueue($queue);
+        throw new Exception("Not implemented");
     }
 
     /**
@@ -176,7 +188,7 @@ class StompQueue extends Queue implements QueueContract
      */
     protected function makeDelayHeader($delay)
     {
-        $delay = $this->getSeconds($delay);
+        $delay = $this->secondsUntil($delay);
 
         if ($this->system == self::SYSTEM_ACTIVEMQ) {
             return ['AMQ_SCHEDULED_DELAY' => $delay * 1000];
